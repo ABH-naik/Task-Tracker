@@ -34,6 +34,9 @@ public class Task {
     @ManyToOne
     @JoinColumn(name = "owner_id", nullable = false)
     private User owner;
+    @ManyToOne
+    @JoinColumn(name = "assignee_id")
+    private User assignee;
 
     @ManyToOne
     @JoinColumn(name = "project_id", nullable = false)

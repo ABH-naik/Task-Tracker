@@ -1,5 +1,6 @@
 package com.tasktracker.service;
 
+import com.tasktracker.dto.response.TaskResponse;
 import com.tasktracker.model.entity.Project;
 import com.tasktracker.model.entity.Task;
 import com.tasktracker.model.entity.User;
@@ -24,7 +25,7 @@ public class TaskService {
 
 
     @Transactional
-    public Task createTask(String description, LocalDate dueDate, Long projectId, Long ownerId) {
+    public TaskResponse createTask(String description, LocalDate dueDate, Long projectId, Long ownerId) {
         if (ownerId == null) {
             throw new IllegalArgumentException("Owner ID is required");
         }
@@ -51,7 +52,8 @@ public class TaskService {
                 .project(project)
                 .build();
 
-        return taskRepository.save(task);
+        Task save = taskRepository.save(task);
+        return TaskResponse.fromEntity(save);
     }
 
     @Transactional

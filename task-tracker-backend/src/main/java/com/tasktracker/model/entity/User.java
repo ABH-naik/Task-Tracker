@@ -9,12 +9,14 @@ import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
 
-   @Entity
+   @Setter
+   @Getter
     @Table(name = "users")
     @Data
    @Builder
    @AllArgsConstructor
    @NoArgsConstructor
+   @Entity
     public class User {
 
         @Id
@@ -29,7 +31,7 @@ import java.util.List;
         private RoleType role;
         @CreationTimestamp
         private LocalDateTime createdAt;
-        @OneToMany(mappedBy = "owner", fetch = FetchType.LAZY, cascade = CascadeType.ALL, orphanRemoval = true)
+        @OneToMany(mappedBy = "owner", fetch = FetchType.LAZY, cascade = {CascadeType.PERSIST, CascadeType.MERGE}, orphanRemoval = true)
         private List<Project> projects = new ArrayList<>();
     @Column(name = "oauth_provider_id", unique = true)
     private String oauthProviderId; // Store Google/GitHub's unique user ID
