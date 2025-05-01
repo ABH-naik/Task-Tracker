@@ -16,10 +16,11 @@ public class UserService {
     private final UserRepository userRepository;
 
     @Transactional
-    public User findOrCreateUser(String oauthProviderId, String email) {
+    public User findOrCreateUser(String name,String oauthProviderId, String email) {
         return userRepository.findByIdentifier(oauthProviderId)
                 .orElseGet(() -> {
                     User newUser = User.builder()
+                            .name(name)
                             .email(email)
                             .oauthProviderId(oauthProviderId)
                             .role(RoleType.READ_ONLY_USER) // Default role

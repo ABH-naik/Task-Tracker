@@ -1,5 +1,7 @@
 package com.tasktracker.service;
 
+import com.tasktracker.dto.request.ProjectRequest;
+import com.tasktracker.dto.response.ProjectResponse;
 import com.tasktracker.model.entity.Project;
 import com.tasktracker.model.entity.User;
 import com.tasktracker.repository.ProjectRepository;
@@ -10,6 +12,7 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDate;
 import java.util.List;
+import java.util.stream.Collectors;
 
 @Service
 @RequiredArgsConstructor
@@ -61,4 +64,36 @@ public class ProjectService {
     public List<Project> getProjectsByOwner(String oauthProviderId) {
         return projectRepository.findByOwnerProviderId(oauthProviderId);
     }
+    @Transactional(readOnly = true)
+    public List<ProjectResponse> getAllProjects() {
+        List<Project> projects = projectRepository.findAll();
+        return projects.stream()
+                .map(ProjectResponse::fromEntity)
+                .collect(Collectors.toList());
+    }
+    @Transactional
+    public Project updateProject(Long projectId, ProjectRequest projectRequest) {
+        Project project = projectRepository.findById(projectId)
+                .orElseThrow(() -> new RuntimeException("Project not found"));
+
+        // Update project fields based on the request
+        project.setName(projectRequest.getName());
+        project.setDescription(projectRequest.getDescription());
+        project.setStartDate(projectRequest.getStartDate());
+        project.setEndDate(projectRequest.getEndDate());
+
+        return projectRepository.save(project);
+    }
+
+    @Transactional
+    public void deleteProject(Long projectId) {
+        if (!projectRepository.existsById(projectId)) {
+            throw new RuntimeException("Project not found");
+        }
+        projectRepository.deleteById(projectId);
+    }
+
+
+
+
 }
