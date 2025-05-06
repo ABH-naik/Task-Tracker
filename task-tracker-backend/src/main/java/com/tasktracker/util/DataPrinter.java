@@ -23,7 +23,9 @@ public class DataPrinter {
     public void printData() {
         System.out.println("== Users and their Projects ==");
         userRepo.findAll().forEach(user -> {
-            System.out.println("UserName: " + user.getName()+"UserGoogleId: " +user.getOauthProviderId()+"UserEmail: "+user.getEmail());
+            System.out.println("UserName: " + user.getName() +
+                    ", UserGoogleId: " + user.getOauthProviderId() +
+                    ", UserEmail: " + user.getEmail());
             user.getProjects().forEach(project -> {
                 System.out.println("   -> Project: " + project.getName());
             });

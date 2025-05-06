@@ -21,6 +21,11 @@ public interface UserRepository extends JpaRepository<User, Long> {
     @Query("SELECT u FROM User u WHERE u.email = :identifier OR u.oauthProviderId = :identifier")
     Optional<User> findByIdentifier(@Param("identifier") String identifier);
 
+    @Query("SELECT u FROM User u WHERE u.email = :email")
+    Optional<User> findByEmail(@Param("email") String email);
+    Optional<User> findByOauthProviderId(String oauthProviderId);
+
+
     // Update OAuth provider ID for existing users
     @Transactional
     @Modifying

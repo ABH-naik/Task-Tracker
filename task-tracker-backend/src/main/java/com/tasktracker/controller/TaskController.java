@@ -8,6 +8,7 @@ import com.tasktracker.model.enums.TaskStatus;
 import com.tasktracker.service.TaskService;
 import jakarta.validation.Valid;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -33,6 +34,7 @@ public class TaskController {
     }
 
     @PostMapping
+    @PreAuthorize("hasAnyRole('ADMIN', 'TASK_CREATOR')")
     public ResponseEntity<TaskResponse> createTask(@Valid @RequestBody TaskRequest taskRequest) {
         TaskResponse taskResponse = taskService.createTask(
                 taskRequest.description(),
@@ -42,6 +44,8 @@ public class TaskController {
         );
         return ResponseEntity.status(201).body(taskResponse);
     }
+
+
 
 
     @PutMapping("/{id}/status")
@@ -60,6 +64,13 @@ public class TaskController {
 
         return ResponseEntity.ok(taskResponses); // Return the response
     }
+    @GetMapping("/{projectId}")
+    public ResponseEntity<List<TaskResponse>> getTasksByProjectId(@PathVariable Long projectId) {
+        List<Task> tasks = taskService.getAllTasksForProject(projectId);
+        List<TaskResponse> taskResponses = tasks.stream().map(TaskResponse::fromEntity).collect(Collectors.toList());
+        return ResponseEntity.ok(taskResponses);
+    }
+
 
 
     @GetMapping("/owner/{oauthProviderId}")
@@ -70,5 +81,11 @@ public class TaskController {
                 .collect(Collectors.toList()); // Collect the results into a List<TaskResponse>
 
         return ResponseEntity.ok(taskResponses); // Return the response
+    }
+    @DeleteMapping("/{id}")
+    @PreAuthorize("@taskSecurity.isTaskOwner(#id) or hasRole('ADMIN')")
+    public ResponseEntity<Void> deleteProject(@PathVariable Long id) {
+        taskService.deleteTaskById(id);
+        return ResponseEntity.noContent().build();
     }
 }

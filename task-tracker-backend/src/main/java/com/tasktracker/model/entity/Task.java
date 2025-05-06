@@ -35,7 +35,7 @@ public class Task {
     @JoinColumn(name = "owner_id", nullable = false)
     private User owner;
     @ManyToOne
-    @JoinColumn(name = "assignee_id")
+    @JoinColumn(name = "assignee_id",nullable = true)
     private User assignee;
 
     @ManyToOne

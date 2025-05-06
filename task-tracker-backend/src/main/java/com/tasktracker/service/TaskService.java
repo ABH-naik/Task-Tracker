@@ -1,6 +1,9 @@
 package com.tasktracker.service;
 
 import com.tasktracker.dto.response.TaskResponse;
+import com.tasktracker.exception.OwnerNotFoundException;
+import com.tasktracker.exception.ProjectNotFoundException;
+import com.tasktracker.exception.TaskNotFoundException;
 import com.tasktracker.model.entity.Project;
 import com.tasktracker.model.entity.Task;
 import com.tasktracker.model.entity.User;
@@ -39,10 +42,10 @@ public class TaskService {
             throw new IllegalArgumentException("Due date is required");
         }
         User owner = userRepository.findById(ownerId)
-                .orElseThrow(() -> new RuntimeException("Owner not found"));
+                .orElseThrow(() -> new OwnerNotFoundException("Owner not found with ID: " +ownerId));
 
         Project project = projectRepository.findById(projectId)
-                .orElseThrow(() -> new RuntimeException("Project not found"));
+                .orElseThrow(() -> new ProjectNotFoundException("Project not found with ID: "+projectId));
 
         Task task = Task.builder()
                 .description(description)
@@ -59,7 +62,7 @@ public class TaskService {
     @Transactional
     public void updateTaskStatus(Long taskId, TaskStatus status) {
         Task task = taskRepository.findById(taskId)
-                .orElseThrow(() -> new RuntimeException("Task not found"));
+                .orElseThrow(() -> new TaskNotFoundException("Project not found with ID: "+taskId));
         task.setStatus(status);
 
         taskRepository.save(task);
@@ -73,5 +76,12 @@ public class TaskService {
     @Transactional(readOnly = true)
     public List<Task> getTasksByOwner(String oauthProviderId) {
         return taskRepository.findByOwnerProviderId(oauthProviderId);
+    }
+    @Transactional
+    public void deleteTaskById(Long taskId) {
+        taskRepository.deleteTask(taskId);
+    }
+    public List<Task> getAllTasksForProject(Long projectId) {
+        return taskRepository.findByProjectId(projectId);
     }
 }

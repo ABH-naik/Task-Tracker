@@ -2,6 +2,8 @@ package com.tasktracker.service;
 
 import com.tasktracker.dto.request.ProjectRequest;
 import com.tasktracker.dto.response.ProjectResponse;
+import com.tasktracker.exception.OwnerNotFoundException;
+import com.tasktracker.exception.ProjectNotFoundException;
 import com.tasktracker.model.entity.Project;
 import com.tasktracker.model.entity.User;
 import com.tasktracker.repository.ProjectRepository;
@@ -41,7 +43,7 @@ public class ProjectService {
             throw new IllegalArgumentException("End date cannot be before start date");
         }
         User owner = userRepository.findById(ownerId)
-                .orElseThrow(() -> new RuntimeException("Owner not found"));
+                .orElseThrow(() -> new OwnerNotFoundException("Owner not found with ID: " + ownerId));
 
         Project project = Project.builder()
                 .name(name)
@@ -57,7 +59,7 @@ public class ProjectService {
     @Transactional(readOnly = true)
     public Project getProjectWithDetails(Long projectId) {
         return projectRepository.findProjectWithDetails(projectId)
-                .orElseThrow(() -> new RuntimeException("Project not found"));
+                .orElseThrow(() -> new ProjectNotFoundException("Project not found with ID: " +projectId));
     }
 
     @Transactional(readOnly = true)
@@ -74,7 +76,7 @@ public class ProjectService {
     @Transactional
     public Project updateProject(Long projectId, ProjectRequest projectRequest) {
         Project project = projectRepository.findById(projectId)
-                .orElseThrow(() -> new RuntimeException("Project not found"));
+                .orElseThrow(() -> new ProjectNotFoundException("Project not found with ID: " +projectId));
 
         // Update project fields based on the request
         project.setName(projectRequest.getName());
@@ -88,7 +90,7 @@ public class ProjectService {
     @Transactional
     public void deleteProject(Long projectId) {
         if (!projectRepository.existsById(projectId)) {
-            throw new RuntimeException("Project not found");
+            throw new ProjectNotFoundException("Project not found with ID: " +projectId);
         }
         projectRepository.deleteById(projectId);
     }

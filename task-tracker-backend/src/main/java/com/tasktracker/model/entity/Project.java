@@ -36,6 +36,7 @@ public class Project {
     @JoinColumn(name = "owner_id", nullable = false)
     private User owner;
 
+
     @CreationTimestamp
     private LocalDateTime createdAt;
 

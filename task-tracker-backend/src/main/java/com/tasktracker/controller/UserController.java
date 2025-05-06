@@ -1,18 +1,24 @@
 package com.tasktracker.controller;
 
+import com.google.api.client.googleapis.auth.oauth2.GoogleIdToken;
+//import com.tasktracker.Security.GoogleTokenVerifier;
 import com.tasktracker.dto.request.OAuthLoginRequest;
 import com.tasktracker.dto.request.UserRequest;
 import com.tasktracker.dto.response.AuthResponse;
+import com.tasktracker.dto.response.ProjectResponse;
 import com.tasktracker.dto.response.UserResponse;
 import com.tasktracker.model.entity.User;
 import com.tasktracker.model.enums.RoleType;
+import com.tasktracker.repository.UserRepository;
 import com.tasktracker.service.UserService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
+import java.util.Map;
 
 @RestController
 @RequestMapping("/api/users")
@@ -20,26 +26,21 @@ import java.util.List;
 public class UserController {
 
     private final UserService userService;
+    @Autowired
+    private UserRepository userRepository;
 
-    // 1. Create or login via OAuth
-    @PostMapping("/oauth/login")
-    public ResponseEntity<AuthResponse> oauthLogin(@Valid @RequestBody OAuthLoginRequest request) {
-        User user = userService.findOrCreateUser(request.oauthProviderId(), request.email(), request.name());
-        AuthResponse response = new AuthResponse(
-                user.getId(),
-                user.getEmail(),
-                user.getName(),
-                user.getRole(),
-                "mocked-token" // Replace with JWT/actual token generation if implemented
-        );
-        return ResponseEntity.ok(response);
-    }
+
 
     // 2. Get user by ID
     @GetMapping("/{id}")
     public ResponseEntity<UserResponse> getUserById(@PathVariable Long id) {
         User user = userService.getUserById(id);
         return ResponseEntity.ok(UserResponse.fromEntity(user));
+    }
+    @GetMapping
+    public ResponseEntity<List<UserResponse>> getAllProjects() {
+        List<UserResponse> projects = userService.getAllUsers();
+        return ResponseEntity.ok(projects);
     }
 
     // 3. Update user role
