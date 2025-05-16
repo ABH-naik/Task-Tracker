@@ -18,4 +18,5 @@ public class UserRequest {
     private String name;
 
     private String oauthProviderId; // For OAuth integration
+    private boolean emailVerified; // For OAuth integration
 }

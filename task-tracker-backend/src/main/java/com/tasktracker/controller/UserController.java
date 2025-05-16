@@ -1,7 +1,5 @@
 package com.tasktracker.controller;
 
-import com.google.api.client.googleapis.auth.oauth2.GoogleIdToken;
-//import com.tasktracker.Security.GoogleTokenVerifier;
 import com.tasktracker.dto.request.OAuthLoginRequest;
 import com.tasktracker.dto.request.UserRequest;
 import com.tasktracker.dto.response.AuthResponse;
@@ -11,12 +9,21 @@ import com.tasktracker.model.entity.User;
 import com.tasktracker.model.enums.RoleType;
 import com.tasktracker.repository.UserRepository;
 import com.tasktracker.service.UserService;
+import io.jsonwebtoken.Jwts;
+import io.jsonwebtoken.SignatureAlgorithm;
+import io.jsonwebtoken.security.Keys;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
+import java.nio.charset.StandardCharsets;
+import java.security.Key;
+import java.util.Date;
 import java.util.List;
 import java.util.Map;
 
@@ -29,8 +36,24 @@ public class UserController {
     @Autowired
     private UserRepository userRepository;
 
+    @PostMapping
+    public ResponseEntity<User> createUser(@Valid @RequestBody UserRequest userRequest) {
+        User createdUser = userService.findOrCreateUser(
+                userRequest.getEmail(),
+                userRequest.getName(),
+                userRequest.getOauthProviderId(),
+                userRequest.isEmailVerified()
+        );
+        return new ResponseEntity<>(createdUser, HttpStatus.CREATED);
+    }
 
-
+    @DeleteMapping("/{userId}")
+    @PreAuthorize("hasRole('ADMIN')")  // Only admins can delete users
+    public ResponseEntity<String> deleteUser(@PathVariable Long userId) {
+        userService.deleteUser(userId);
+        String responseMessage = "User deleted with ID " + userId;
+        return ResponseEntity.ok(responseMessage);
+    }
     // 2. Get user by ID
     @GetMapping("/{id}")
     public ResponseEntity<UserResponse> getUserById(@PathVariable Long id) {

@@ -34,13 +34,14 @@ public class TaskController {
     }
 
     @PostMapping
-    @PreAuthorize("hasAnyRole('ADMIN', 'TASK_CREATOR')")
     public ResponseEntity<TaskResponse> createTask(@Valid @RequestBody TaskRequest taskRequest) {
         TaskResponse taskResponse = taskService.createTask(
                 taskRequest.description(),
                 taskRequest.dueDate(),
                 taskRequest.projectId(),
-                taskRequest.ownerId()
+                taskRequest.ownerId(),
+                taskRequest.assigneeId()  // Add this parameter
+
         );
         return ResponseEntity.status(201).body(taskResponse);
     }
@@ -49,8 +50,8 @@ public class TaskController {
 
 
     @PutMapping("/{id}/status")
-    public ResponseEntity<Void> updateTaskStatus(@PathVariable Long id, @RequestParam TaskStatus status) {
-        taskService.updateTaskStatus(id, status);
+    public ResponseEntity<Void> updateTaskStatus(@PathVariable Long id, @RequestParam TaskStatus status, @RequestParam(required = false) Long assigneeId) {
+        taskService.updateTaskStatus(id, status, assigneeId);
         return ResponseEntity.noContent().build();
     }
 
@@ -83,7 +84,6 @@ public class TaskController {
         return ResponseEntity.ok(taskResponses); // Return the response
     }
     @DeleteMapping("/{id}")
-    @PreAuthorize("@taskSecurity.isTaskOwner(#id) or hasRole('ADMIN')")
     public ResponseEntity<Void> deleteProject(@PathVariable Long id) {
         taskService.deleteTaskById(id);
         return ResponseEntity.noContent().build();

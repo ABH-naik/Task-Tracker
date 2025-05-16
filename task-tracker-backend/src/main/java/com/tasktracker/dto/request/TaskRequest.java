@@ -18,5 +18,7 @@ public record TaskRequest(
         @NotBlank String description,
         @FutureOrPresent LocalDate dueDate,
         @NotNull Long projectId,
-        @NotNull Long ownerId // Reference to the user assigned to the task
+        @NotNull Long ownerId, // Reference to the user assigned to the task
+        Long assigneeId  // Optional (no @NotNull annotation)
+
 ) {}

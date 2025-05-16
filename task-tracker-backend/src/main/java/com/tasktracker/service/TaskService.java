@@ -11,6 +11,7 @@ import com.tasktracker.model.enums.TaskStatus;
 import com.tasktracker.repository.ProjectRepository;
 import com.tasktracker.repository.TaskRepository;
 import com.tasktracker.repository.UserRepository;
+import jakarta.persistence.EntityNotFoundException;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -28,7 +29,7 @@ public class TaskService {
 
 
     @Transactional
-    public TaskResponse createTask(String description, LocalDate dueDate, Long projectId, Long ownerId) {
+    public TaskResponse createTask(String description, LocalDate dueDate, Long projectId, Long ownerId, Long assigneeId) {
         if (ownerId == null) {
             throw new IllegalArgumentException("Owner ID is required");
         }
@@ -42,10 +43,10 @@ public class TaskService {
             throw new IllegalArgumentException("Due date is required");
         }
         User owner = userRepository.findById(ownerId)
-                .orElseThrow(() -> new OwnerNotFoundException("Owner not found with ID: " +ownerId));
+                .orElseThrow(() -> new OwnerNotFoundException("Owner not found with ID: " + ownerId));
 
         Project project = projectRepository.findById(projectId)
-                .orElseThrow(() -> new ProjectNotFoundException("Project not found with ID: "+projectId));
+                .orElseThrow(() -> new ProjectNotFoundException("Project not found with ID: " + projectId));
 
         Task task = Task.builder()
                 .description(description)
@@ -55,15 +56,25 @@ public class TaskService {
                 .project(project)
                 .build();
 
+        if (assigneeId != null) {
+            User assignee = userRepository.findById(assigneeId)
+                    .orElseThrow(() -> new RuntimeException("Assignee not found"));
+            task.setAssignee(assignee);
+    }
+
         Task save = taskRepository.save(task);
         return TaskResponse.fromEntity(save);
     }
 
     @Transactional
-    public void updateTaskStatus(Long taskId, TaskStatus status) {
+    public void updateTaskStatus(Long taskId, TaskStatus status, Long assigneeId) {
         Task task = taskRepository.findById(taskId)
                 .orElseThrow(() -> new TaskNotFoundException("Project not found with ID: "+taskId));
         task.setStatus(status);
+        if (assigneeId != null) {
+            User newAssignee = userRepository.findById(assigneeId).orElseThrow(() -> new EntityNotFoundException("User not found"));
+            task.setAssignee(newAssignee);
+        }
 
         taskRepository.save(task);
     }

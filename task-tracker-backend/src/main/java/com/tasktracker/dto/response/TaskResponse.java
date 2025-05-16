@@ -14,7 +14,8 @@ public record TaskResponse(
         String projectName,
         Long ownerId,
         String ownerName,
-        LocalDateTime createdAt
+        LocalDateTime createdAt,
+        Long assigneeId
 ) {
     public static TaskResponse fromEntity(Task task) {
         return new TaskResponse(
@@ -26,7 +27,8 @@ public record TaskResponse(
                 task.getProject().getName(),
                 task.getOwner().getId(),
                 task.getOwner().getName(),
-                task.getCreatedAt()
+                task.getCreatedAt(),
+                task.getAssignee() != null ? task.getAssignee().getId() : null
         );
     }
 }
