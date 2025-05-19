@@ -1,12 +1,15 @@
 package com.tasktracker.controller;
 
 
+import com.tasktracker.dto.request.TaskQueryRequest;
 import com.tasktracker.dto.request.TaskRequest;
+import com.tasktracker.dto.request.TaskStatusUpdateRequest;
 import com.tasktracker.dto.response.TaskResponse;
 import com.tasktracker.model.entity.Task;
 import com.tasktracker.model.enums.TaskStatus;
 import com.tasktracker.service.TaskService;
 import jakarta.validation.Valid;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
@@ -49,11 +52,7 @@ public class TaskController {
 
 
 
-    @PutMapping("/{id}/status")
-    public ResponseEntity<Void> updateTaskStatus(@PathVariable Long id, @RequestParam TaskStatus status, @RequestParam(required = false) Long assigneeId) {
-        taskService.updateTaskStatus(id, status, assigneeId);
-        return ResponseEntity.noContent().build();
-    }
+
 
 
     @GetMapping("/overdue")
@@ -88,4 +87,36 @@ public class TaskController {
         taskService.deleteTaskById(id);
         return ResponseEntity.noContent().build();
     }
+    @GetMapping("/assigned")
+    public ResponseEntity<List<TaskResponse>> getTasksAssignedToUser(
+            @RequestParam Long userId,
+            @RequestParam Long projectId) {
+
+        List<Task> tasks = taskService.getTasksByUserAndProject(userId, projectId);
+        List<TaskResponse> response = tasks.stream()
+                .map(TaskResponse::fromEntity)
+                .toList();
+
+        return ResponseEntity.ok(response);
+    }
+
+    @PostMapping("/filter")
+    public ResponseEntity<List<TaskResponse>> getTasksByUserAndProject(@RequestBody TaskQueryRequest request) {
+        List<Task> tasks = taskService.getTasksByUserAndProject(request.getUserId(), request.getProjectId());
+
+        List<TaskResponse> responses = tasks.stream()
+                .map(TaskResponse::fromEntity)
+                .toList();
+
+        return ResponseEntity.ok(responses);
+    }
+    @PutMapping("/update-status")
+    public ResponseEntity<String> updateTaskStatus(@RequestBody @Valid TaskStatusUpdateRequest request) {
+        taskService.updateTaskStatus(request);
+        return ResponseEntity.ok("Task status updated successfully");
+    }
+
+
+
+
 }

@@ -3,11 +3,12 @@ package com.tasktracker.service;
 import com.tasktracker.dto.request.ProjectRequest;
 import com.tasktracker.dto.response.ProjectResponse;
 import com.tasktracker.exception.OwnerNotFoundException;
-import com.tasktracker.exception.ProjectNotFoundException;
+import com.tasktracker.exception.UserNotFoundException;
 import com.tasktracker.model.entity.Project;
 import com.tasktracker.model.entity.User;
 import com.tasktracker.repository.ProjectRepository;
 import com.tasktracker.repository.UserRepository;
+import jakarta.persistence.EntityNotFoundException;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -43,7 +44,7 @@ public class ProjectService {
             throw new IllegalArgumentException("End date cannot be before start date");
         }
         User owner = userRepository.findById(ownerId)
-                .orElseThrow(() -> new OwnerNotFoundException("Owner not found with ID: " + ownerId));
+                .orElseThrow(() -> new IllegalArgumentException("Owner not found with ID: " + ownerId));
 
         Project project = Project.builder()
                 .name(name)
@@ -59,7 +60,19 @@ public class ProjectService {
     @Transactional(readOnly = true)
     public Project getProjectWithDetails(Long projectId) {
         return projectRepository.findProjectWithDetails(projectId)
-                .orElseThrow(() -> new ProjectNotFoundException("Project not found with ID: " +projectId));
+                .orElseThrow(() -> new IllegalArgumentException("Project not found with ID: " +projectId));
+    }
+    @Transactional(readOnly = true)
+    public List<ProjectResponse> getProjectsByUserId(Long userId) {
+        // Check if user exists
+        User user = userRepository.findById(userId)
+                .orElseThrow(() -> new IllegalArgumentException("User not found with ID: " + userId));
+
+        List<Project> projects = projectRepository.findByUserId(userId);
+
+        return projects.stream()
+                .map(ProjectResponse::fromEntity)
+                .collect(Collectors.toList());
     }
 
     @Transactional(readOnly = true)
@@ -76,7 +89,7 @@ public class ProjectService {
     @Transactional
     public Project updateProject(Long projectId, ProjectRequest projectRequest) {
         Project project = projectRepository.findById(projectId)
-                .orElseThrow(() -> new ProjectNotFoundException("Project not found with ID: " +projectId));
+                .orElseThrow(() -> new IllegalArgumentException("Project not found with ID: " +projectId));
 
         // Update project fields based on the request
         project.setName(projectRequest.getName());
@@ -90,10 +103,23 @@ public class ProjectService {
     @Transactional
     public void deleteProject(Long projectId) {
         if (!projectRepository.existsById(projectId)) {
-            throw new ProjectNotFoundException("Project not found with ID: " +projectId);
+            throw new IllegalArgumentException("Project not found with ID: " +projectId);
         }
         projectRepository.deleteById(projectId);
     }
+    @Transactional
+    public void assignUserToProject(Long projectId, Long userId) {
+        Project project = projectRepository.findById(projectId)
+                .orElseThrow(() -> new IllegalArgumentException("Project not found with ID: " +projectId));
+
+        User user = userRepository.findById(userId)
+                .orElseThrow(() -> new IllegalArgumentException("User not found with ID: " + userId));
+
+        project.getAssignedUsers().add(user);
+        projectRepository.save(project);
+    }
+
+
 
 
 

@@ -60,7 +60,7 @@ public class UserService implements UserDetailsService {
     @Transactional
     public void deleteUser(Long userId) {
         User user = userRepository.findById(userId)
-                .orElseThrow(() -> new UserNotFoundException("User not found with id: " + userId));
+                .orElseThrow(() -> new IllegalArgumentException("User not found with id: " + userId));
 
 
 
@@ -70,7 +70,7 @@ public class UserService implements UserDetailsService {
     @Transactional(readOnly = true)
     public User getUserById(Long id) {
         return userRepository.findById(id)
-                .orElseThrow(() -> new UserNotFoundException("User not found"));
+                .orElseThrow(() -> new IllegalArgumentException("User not found with ID: " + id));
     }
     @Transactional(readOnly = true)
     public List<UserResponse> getAllUsers() {
@@ -95,7 +95,7 @@ public class UserService implements UserDetailsService {
     @Override
     public UserDetails loadUserByUsername(String email) throws UsernameNotFoundException {
         User user = userRepository.findByEmail(email)
-                .orElseThrow(() -> new UserNotFoundException("User not found with email: " + email));
+                .orElseThrow(() -> new IllegalArgumentException("User not found with email: " + email));
 
         return new org.springframework.security.core.userdetails.User(
                 user.getEmail(),
@@ -106,11 +106,6 @@ public class UserService implements UserDetailsService {
 
     private Collection<? extends GrantedAuthority> getAuthorities(RoleType role) {
         return Collections.singletonList(new SimpleGrantedAuthority("ROLE_" + role.name()));
-    }
-    @Transactional(readOnly = true)
-    public User getUserByEmail(String email) {
-        return userRepository.findByEmail(email)
-                .orElseThrow(() -> new UserNotFoundException("User not found with email: " + email));
     }
 
     public String generateJwtToken(User user) {

@@ -13,6 +13,9 @@ public interface ProjectRepository extends JpaRepository<Project, Long> {
     // Find projects with tasks and owner (eager loading)
     @Query("SELECT p FROM Project p LEFT JOIN FETCH p.tasks LEFT JOIN FETCH p.owner WHERE p.id = :id")
     Optional<Project> findProjectWithDetails(@Param("id") Long id);
+    @Query("SELECT p FROM Project p JOIN p.assignedUsers u WHERE u.id = :userId")
+    List<Project> findByUserId(@Param("userId") Long userId);
+
 
     // Find projects by owner's OAuth provider ID
     @Query("SELECT p FROM Project p JOIN p.owner u WHERE u.oauthProviderId = :providerId")

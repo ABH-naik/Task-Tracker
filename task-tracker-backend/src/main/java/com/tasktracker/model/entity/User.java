@@ -38,5 +38,8 @@ public class User {
     private String oauthProviderId; // Store Google/GitHub's unique user ID
     @Column(name = "email_verified", updatable = false)
     private Boolean emailVerified = false;
+    @ManyToMany(mappedBy = "assignedUsers")
+    private List<Project> assignedProjects = new ArrayList<>();
+
 
 }

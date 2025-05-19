@@ -10,6 +10,7 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDate;
 import java.util.List;
+import java.util.Optional;
 
 public interface TaskRepository extends JpaRepository<Task, Long> {
 
@@ -33,4 +34,8 @@ public interface TaskRepository extends JpaRepository<Task, Long> {
     // Find tasks by owner's OAuth provider ID
     @Query("SELECT t FROM Task t JOIN t.owner u WHERE u.oauthProviderId = :providerId")
     List<Task> findByOwnerProviderId(@Param("providerId") String providerId);
+    List<Task> findByAssigneeIdAndProjectId(Long userId, Long projectId);
+    Optional<Task> findByIdAndAssigneeIdAndProjectId(Long id, Long assigneeId, Long projectId);
+
+
 }

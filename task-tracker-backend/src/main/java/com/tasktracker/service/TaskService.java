@@ -1,5 +1,6 @@
 package com.tasktracker.service;
 
+import com.tasktracker.dto.request.TaskStatusUpdateRequest;
 import com.tasktracker.dto.response.TaskResponse;
 import com.tasktracker.exception.OwnerNotFoundException;
 import com.tasktracker.exception.ProjectNotFoundException;
@@ -18,6 +19,7 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDate;
 import java.util.List;
+import java.util.Optional;
 
 @Service
 @RequiredArgsConstructor
@@ -43,10 +45,10 @@ public class TaskService {
             throw new IllegalArgumentException("Due date is required");
         }
         User owner = userRepository.findById(ownerId)
-                .orElseThrow(() -> new OwnerNotFoundException("Owner not found with ID: " + ownerId));
+                .orElseThrow(() -> new IllegalArgumentException("Owner not found with ID: " + ownerId));
 
         Project project = projectRepository.findById(projectId)
-                .orElseThrow(() -> new ProjectNotFoundException("Project not found with ID: " + projectId));
+                .orElseThrow(() -> new IllegalArgumentException("Project not found with ID: " + projectId));
 
         Task task = Task.builder()
                 .description(description)
@@ -58,7 +60,7 @@ public class TaskService {
 
         if (assigneeId != null) {
             User assignee = userRepository.findById(assigneeId)
-                    .orElseThrow(() -> new RuntimeException("Assignee not found"));
+                    .orElseThrow(() -> new IllegalArgumentException("Assignee not found"));
             task.setAssignee(assignee);
     }
 
@@ -66,18 +68,18 @@ public class TaskService {
         return TaskResponse.fromEntity(save);
     }
 
-    @Transactional
-    public void updateTaskStatus(Long taskId, TaskStatus status, Long assigneeId) {
-        Task task = taskRepository.findById(taskId)
-                .orElseThrow(() -> new TaskNotFoundException("Project not found with ID: "+taskId));
-        task.setStatus(status);
-        if (assigneeId != null) {
-            User newAssignee = userRepository.findById(assigneeId).orElseThrow(() -> new EntityNotFoundException("User not found"));
-            task.setAssignee(newAssignee);
-        }
+    public void updateTaskStatus(TaskStatusUpdateRequest request) {
+        Task task = taskRepository.findByIdAndAssigneeIdAndProjectId(
+                request.getTaskId(),
+                request.getUserId(),
+                request.getProjectId()
+        ).orElseThrow(() -> new RuntimeException("Task not found for the given user, project, and task ID"));
 
+        task.setStatus(request.getStatus());
         taskRepository.save(task);
     }
+
+
 
     @Transactional(readOnly = true)
     public List<Task> getOverdueTasks() {
@@ -95,4 +97,11 @@ public class TaskService {
     public List<Task> getAllTasksForProject(Long projectId) {
         return taskRepository.findByProjectId(projectId);
     }
+
+    public List<Task> getTasksByUserAndProject(Long userId, Long projectId) {
+        return taskRepository.findByAssigneeIdAndProjectId(userId, projectId);
+    }
+
+
+
 }
