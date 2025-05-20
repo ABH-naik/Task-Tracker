@@ -1,4 +1,5 @@
 version: "3.8"
+
 services:
   db:
     image: mysql:8
@@ -7,17 +8,31 @@ services:
     environment:
       MYSQL_ROOT_PASSWORD: root
       MYSQL_DATABASE: tasktracker
+      MYSQL_USER: appuser  # Add this
+      MYSQL_PASSWORD: apppass  # Add this
     ports:
-      - "3307:3306"
+      - "3307:3306"  # External:Internal
+    volumes:
+      - db_data:/var/lib/mysql
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost"]
+      interval: 5s
+      timeout: 10s
+      retries: 10
 
   backend:
     build: .
     container_name: spring_app
     depends_on:
-      - db
+      db:
+        condition: service_healthy
     environment:
-      SPRING_DATASOURCE_URL: jdbc:mysql://db:3306/tasktracker?createDatabaseIfNotExist=true&useSSL=false&allowPublicKeyRetrieval=true
+      SPRING_DATASOURCE_URL: jdbc:mysql://db:3306/tasktracker?useSSL=false&allowPublicKeyRetrieval=true
       SPRING_DATASOURCE_USERNAME: root
       SPRING_DATASOURCE_PASSWORD: root
     ports:
       - "8080:8080"
+    restart: unless-stopped
+
+volumes:
+  db_data:
