@@ -1,3 +1,43 @@
+#version: "3.8"
+#
+#services:
+#  db:
+#    image: mysql:8
+#    container_name: mysql_db
+#    restart: always
+#    environment:
+#      MYSQL_ROOT_PASSWORD: root
+#      MYSQL_DATABASE: tasktracker
+#      MYSQL_USER: appuser
+#      MYSQL_PASSWORD: apppass
+#    ports:
+#      - "3306:3306"
+#    volumes:
+#      - db_data:/var/lib/mysql
+#    healthcheck:
+#      test: ["CMD", "mysqladmin", "ping", "-h", "localhost"]
+#      interval: 5s
+#      timeout: 10s
+#      retries: 10
+#    command: --bind-address=0.0.0.0 --skip-name-resolve  # Moved inside db service
+#
+#  backend:
+#    build: .
+#    container_name: spring_app
+#    depends_on:
+#      db:
+#        condition: service_healthy
+#    environment:
+#      SPRING_DATASOURCE_URL: jdbc:mysql://db:3306/tasktracker?useSSL=false&allowPublicKeyRetrieval=true&serverTimezone=UTC
+#      SPRING_DATASOURCE_USERNAME: appuser  # Changed from root to appuser
+#      SPRING_DATASOURCE_PASSWORD: apppass  # Changed from root to apppass
+#    ports:
+#      - "8080:8080"
+#    restart: unless-stopped
+#
+#volumes:
+#  db_data:  # Fixed indentation and syntax
+
 version: "3.8"
 
 services:
@@ -8,17 +48,25 @@ services:
     environment:
       MYSQL_ROOT_PASSWORD: root
       MYSQL_DATABASE: tasktracker
-      MYSQL_USER: appuser  # Add this
-      MYSQL_PASSWORD: apppass  # Add this
     ports:
-      - "3307:3306"  # External:Internal
+      - "3306:3306"
     volumes:
       - db_data:/var/lib/mysql
     healthcheck:
-      test: ["CMD", "mysqladmin", "ping", "-h", "localhost"]
-      interval: 5s
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost", "-u", "root", "-proot"]
+      interval: 10s
       timeout: 10s
       retries: 10
+      start_period: 30s
+    command: >
+      --bind-address=0.0.0.0 
+      --skip-name-resolve 
+      --max-connections=200
+      --connect-timeout=60
+      --wait-timeout=28800
+      --interactive-timeout=28800
+      --innodb-buffer-pool-size=512M
+      --innodb-log-file-size=256M
 
   backend:
     build: .
@@ -27,9 +75,9 @@ services:
       db:
         condition: service_healthy
     environment:
-      SPRING_DATASOURCE_URL: jdbc:mysql://db:3306/tasktracker?useSSL=false&allowPublicKeyRetrieval=true&serverTimezone=UTC
-      SPRING_DATASOURCE_USERNAME: root
-      SPRING_DATASOURCE_PASSWORD: root
+      DB_HOST: db
+      DB_USERNAME: root
+      DB_PASSWORD: root
     ports:
       - "8080:8080"
     restart: unless-stopped

@@ -40,8 +40,8 @@ public class UserService implements UserDetailsService {
     @Value("${jwt.expiration}")
     private long jwtExpirationMs;
 
-    @Value("${spring.security.oauth2.resourceserver.jwt.issuer-uri}")
-    private String issuerUri;
+//    @Value("${spring.security.oauth2.resourceserver.jwt.issuer-uri}")
+//    private String issuerUri;
 
     @Transactional
     public User findOrCreateUser(String email, String name, String oauthProviderId,boolean emailVerified) {
