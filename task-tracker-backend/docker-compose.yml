@@ -75,7 +75,7 @@ services:
       db:
         condition: service_healthy
     environment:
-      DB_HOST: db
+      DB_HOST: 13.233.124.153
       DB_USERNAME: root
       DB_PASSWORD: root
     ports:
@@ -84,3 +84,4 @@ services:
 
 volumes:
   db_data:
+
