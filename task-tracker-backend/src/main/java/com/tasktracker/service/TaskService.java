@@ -1,9 +1,12 @@
 package com.tasktracker.service;
 
+import com.tasktracker.dto.request.TaskRequest;
 import com.tasktracker.dto.request.TaskStatusUpdateRequest;
+import com.tasktracker.dto.request.UpdateTaskRequest;
 import com.tasktracker.dto.response.TaskResponse;
 import com.tasktracker.exception.OwnerNotFoundException;
 import com.tasktracker.exception.ProjectNotFoundException;
+import com.tasktracker.exception.ResourceNotFoundException;
 import com.tasktracker.exception.TaskNotFoundException;
 import com.tasktracker.model.entity.Project;
 import com.tasktracker.model.entity.Task;
@@ -68,6 +71,28 @@ public class TaskService {
         return TaskResponse.fromEntity(save);
     }
 
+    public TaskResponse updateTask(Long taskId, UpdateTaskRequest request) {
+        Task task = taskRepository.findById(taskId)
+                .orElseThrow(() -> new ResourceNotFoundException("Task not found"));
+
+        if (request.description() != null) {
+            task.setDescription(request.description());
+        }
+        if (request.dueDate() != null) {
+            task.setDueDate(request.dueDate());
+        }
+        if (request.status() != null) {                  // handle status
+            task.setStatus(request.status());
+        }
+        if (request.assigneeId() != null) {
+            User assignee = userRepository.findById(request.assigneeId())
+                    .orElseThrow(() -> new ResourceNotFoundException("Assignee not found"));
+            task.setAssignee(assignee);
+        }
+
+        Task saved = taskRepository.save(task);
+        return TaskResponse.fromEntity(saved);
+    }
     public void updateTaskStatus(TaskStatusUpdateRequest request) {
         Task task = taskRepository.findByIdAndAssigneeIdAndProjectId(
                 request.getTaskId(),

@@ -1,5 +1,6 @@
 package com.tasktracker.service;
 
+import com.tasktracker.controller.UserController;
 import com.tasktracker.dto.response.ProjectResponse;
 import com.tasktracker.dto.response.UserResponse;
 import com.tasktracker.exception.UserNotFoundException;
@@ -11,6 +12,7 @@ import io.jsonwebtoken.Jwts;
 import io.jsonwebtoken.SignatureAlgorithm;
 import io.jsonwebtoken.security.Keys;
 import lombok.RequiredArgsConstructor;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
@@ -34,14 +36,14 @@ public class UserService implements UserDetailsService {
 
     private final UserRepository userRepository;
 
+
     @Value("${jwt.secret}")
     private String jwtSecret;
 
     @Value("${jwt.expiration}")
     private long jwtExpirationMs;
 
-//    @Value("${spring.security.oauth2.resourceserver.jwt.issuer-uri}")
-//    private String issuerUri;
+
 
     @Transactional
     public User findOrCreateUser(String email, String name, String oauthProviderId,boolean emailVerified) {

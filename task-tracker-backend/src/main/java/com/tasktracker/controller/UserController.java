@@ -9,9 +9,6 @@ import com.tasktracker.model.entity.User;
 import com.tasktracker.model.enums.RoleType;
 import com.tasktracker.repository.UserRepository;
 import com.tasktracker.service.UserService;
-import io.jsonwebtoken.Jwts;
-import io.jsonwebtoken.SignatureAlgorithm;
-import io.jsonwebtoken.security.Keys;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -21,7 +18,6 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
-import java.nio.charset.StandardCharsets;
 import java.security.Key;
 import java.util.Date;
 import java.util.List;
@@ -30,6 +26,7 @@ import java.util.Map;
 @RestController
 @RequestMapping("/api/users")
 @RequiredArgsConstructor
+@CrossOrigin(origins = "http://localhost:3000")
 public class UserController {
 
     private final UserService userService;
@@ -60,18 +57,25 @@ public class UserController {
         User user = userService.getUserById(id);
         return ResponseEntity.ok(UserResponse.fromEntity(user));
     }
-    @GetMapping
-    public ResponseEntity<List<UserResponse>> getAllProjects() {
+    @GetMapping(path = { "", "/" })
+    public ResponseEntity<List<UserResponse>> getAllUsers() {
         List<UserResponse> projects = userService.getAllUsers();
         return ResponseEntity.ok(projects);
     }
 
     // 3. Update user role
     @PutMapping("/{id}/role")
-    public ResponseEntity<UserResponse> updateUserRole(@PathVariable Long id, @RequestParam RoleType role) {
-        User updatedUser = userService.updateUserRole(id, role);
+    public ResponseEntity<UserResponse> updateUserRole(@PathVariable Long id, @RequestParam String role) {
+        RoleType roleType;
+        try {
+            roleType = RoleType.fromString(role);
+        } catch (IllegalArgumentException ex) {
+            return ResponseEntity.badRequest().body(null); // or send custom error object
+        }
+        User updatedUser = userService.updateUserRole(id, roleType);
         return ResponseEntity.ok(UserResponse.fromEntity(updatedUser));
     }
+
 
     // 4. Get users by role
     @GetMapping("/by-role")

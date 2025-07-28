@@ -14,8 +14,11 @@ public record TaskResponse(
         String projectName,
         Long ownerId,
         String ownerName,
-        LocalDateTime createdAt,
-        Long assigneeId
+
+        Long   assigneeId,      // existing
+        String assigneeName,    // ← new field
+
+        LocalDateTime createdAt
 ) {
     public static TaskResponse fromEntity(Task task) {
         return new TaskResponse(
@@ -27,8 +30,16 @@ public record TaskResponse(
                 task.getProject().getName(),
                 task.getOwner().getId(),
                 task.getOwner().getName(),
-                task.getCreatedAt(),
-                task.getAssignee() != null ? task.getAssignee().getId() : null
+
+                task.getAssignee() != null
+                        ? task.getAssignee().getId()
+                        : null,
+
+                task.getAssignee() != null
+                        ? task.getAssignee().getName()
+                        : null,                   // ← populate here
+
+                task.getCreatedAt()
         );
     }
 }

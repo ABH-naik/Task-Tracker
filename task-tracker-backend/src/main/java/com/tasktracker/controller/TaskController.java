@@ -1,9 +1,7 @@
 package com.tasktracker.controller;
 
 
-import com.tasktracker.dto.request.TaskQueryRequest;
-import com.tasktracker.dto.request.TaskRequest;
-import com.tasktracker.dto.request.TaskStatusUpdateRequest;
+import com.tasktracker.dto.request.*;
 import com.tasktracker.dto.response.TaskResponse;
 import com.tasktracker.model.entity.Task;
 import com.tasktracker.model.enums.TaskStatus;
@@ -28,6 +26,7 @@ import java.util.stream.Collectors;
 
 @RestController
 @RequestMapping("/api/tasks")
+@CrossOrigin(origins = "http://localhost:3000") // Adjust the origin as needed
 public class TaskController {
 
     private final TaskService taskService;
@@ -110,12 +109,20 @@ public class TaskController {
 
         return ResponseEntity.ok(responses);
     }
-    @PutMapping("/update-status")
-    public ResponseEntity<String> updateTaskStatus(@RequestBody @Valid TaskStatusUpdateRequest request) {
-        taskService.updateTaskStatus(request);
-        return ResponseEntity.ok("Task status updated successfully");
-    }
+//    @PutMapping("/update-status")
+//    public ResponseEntity<String> updateTaskStatus(@RequestBody @Valid TaskStatusUpdateRequest request) {
+//        taskService.updateTaskStatus(request);
+//        return ResponseEntity.ok("Task status updated successfully");
+//    }
 
+    @PutMapping("/{id}")
+    public ResponseEntity<TaskResponse> updateTask(
+            @PathVariable Long id,
+            @Valid @RequestBody UpdateTaskRequest req
+    ) {
+        TaskResponse updated = taskService.updateTask(id, req);
+        return ResponseEntity.ok(updated);
+    }
 
 
 

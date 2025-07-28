@@ -14,13 +14,12 @@ import org.springframework.security.config.annotation.method.configuration.Enabl
 import org.springframework.transaction.annotation.Transactional;
 
 @SpringBootApplication
-@EnableMethodSecurity(prePostEnabled = true) // For @PreAuthorize
+//@EnableMethodSecurity(prePostEnabled = true) // For @PreAuthorize
 public class TaskTrackerBackendApplication {
 
 	public static void main(String[] args) {
 		SpringApplication.run(TaskTrackerBackendApplication.class, args);
 		System.out.println("Hello World");
-
 	}
 
 	@Bean
