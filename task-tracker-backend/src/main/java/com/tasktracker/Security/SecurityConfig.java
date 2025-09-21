@@ -6,6 +6,7 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.http.HttpMethod;
+import org.springframework.security.config.annotation.method.configuration.EnableMethodSecurity;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
 import org.springframework.security.config.annotation.web.configurers.AbstractHttpConfigurer;
@@ -21,6 +22,8 @@ import java.nio.charset.StandardCharsets;
 
 @Configuration
 @EnableWebSecurity
+@EnableMethodSecurity(prePostEnabled = true) // ← ADD THIS LINE
+
 public class SecurityConfig {
 
     @Value("${jwt.secret}")
@@ -32,15 +35,14 @@ public class SecurityConfig {
                 .csrf(AbstractHttpConfigurer::disable)
                 .sessionManagement(sm -> sm.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
                 .authorizeHttpRequests(auth -> auth
-
-                        // Allow preflight OPTIONS
-                        .requestMatchers(HttpMethod.OPTIONS, "/**").permitAll()
+                        // Allow preflight OPTIONS requests for ALL endpoints
+                        .requestMatchers(HttpMethod.OPTIONS, "/**").permitAll() // ← THIS IS CRITICAL
 
                         // Public endpoints
                         .requestMatchers("/api/auth/**", "/api/test/generate-token").permitAll()
                         .requestMatchers("/swagger-ui/**", "/v3/api-docs/**").permitAll()
 
-                        // Expose roles endpoint publicly
+                        // Expose roles endpoint publicly (consider securing this)
                         .requestMatchers(HttpMethod.GET, "/api/roles/**").permitAll()
 
                         // Project endpoints
@@ -51,18 +53,19 @@ public class SecurityConfig {
 
                         // Task endpoints
                         .requestMatchers(HttpMethod.POST,   "/api/tasks/**").hasAnyRole("ADMIN", "TASK_CREATOR")
-                        .requestMatchers(HttpMethod.PUT,    "/api/tasks/**").hasAnyRole("ADMIN", "TASK_CREATOR")
-                        .requestMatchers(HttpMethod.DELETE, "/api/tasks/**").hasAnyRole("ADMIN", "TASK_CREATOR")
+                        .requestMatchers(HttpMethod.PUT,    "/api/tasks/**").hasAnyRole("ADMIN", "TASK_CREATOR", "READ_ONLY_USER")
+                        .requestMatchers(HttpMethod.DELETE, "/api/tasks/**").hasAnyRole("ADMIN", "TASK_CREATOR", "READ_ONLY_USER")
                         .requestMatchers(HttpMethod.GET,    "/api/tasks/**").hasAnyRole("ADMIN", "TASK_CREATOR", "READ_ONLY_USER")
 
-                        // User management
-                        .requestMatchers("/api/users/**").hasRole("ADMIN")
-                        .requestMatchers(HttpMethod.GET,   "/api/users/**").hasAnyRole("ADMIN", "READ_ONLY_USER")
-                        .requestMatchers(HttpMethod.PUT,   "/api/users/**").hasAnyRole("ADMIN", "TASK_CREATOR")
-                        // grant ADMIN and TASK_CREATOR the right to update tasks
-                        .requestMatchers(HttpMethod.PUT, "/api/tasks/**")
-                        .hasAnyRole("ADMIN", "TASK_CREATOR")
-                        .requestMatchers("/favicon.ico").permitAll()
+                        // User management - FIX THIS SECTION
+                        .requestMatchers(HttpMethod.GET,   "/api/users/**").hasAnyRole("ADMIN", "READ_ONLY_USER","TASK_CREATOR")
+                        .requestMatchers(HttpMethod.POST,   "/api/users/**").hasRole("ADMIN")
+                        .requestMatchers(HttpMethod.PUT,   "/api/users/**").hasRole("ADMIN") // ← This should cover role updates
+                        .requestMatchers(HttpMethod.DELETE,   "/api/users/**").hasRole("ADMIN")
+
+                        // Role management - ADD EXPLICIT RULES
+                        .requestMatchers(HttpMethod.PUT, "/api/roles/**").hasRole("ADMIN") // ← ADD THIS
+
                         // Allow static frontend assets
                         .requestMatchers(
                                 "/favicon.ico",
@@ -72,8 +75,6 @@ public class SecurityConfig {
                                 "/logo192.png",
                                 "/logo512.png"
                         ).permitAll()
-
-
 
                         // Everything else is denied
                         .anyRequest().denyAll()
@@ -98,19 +99,26 @@ public class SecurityConfig {
         return NimbusJwtDecoder.withSecretKey(key).build();
     }
 
+
     @Bean
     public JwtAuthenticationConverter jwtAuthenticationConverter() {
-        JwtGrantedAuthoritiesConverter converter = new JwtGrantedAuthoritiesConverter();
-        converter.setAuthorityPrefix("ROLE_");
-        converter.setAuthoritiesClaimName("roles");
+        JwtGrantedAuthoritiesConverter authoritiesConverter = new JwtGrantedAuthoritiesConverter();
+        authoritiesConverter.setAuthorityPrefix("ROLE_");
+        authoritiesConverter.setAuthoritiesClaimName("roles");
 
         JwtAuthenticationConverter jwtConverter = new JwtAuthenticationConverter();
+        jwtConverter.setJwtGrantedAuthoritiesConverter(authoritiesConverter);
+
+        // Add debug logging
         jwtConverter.setJwtGrantedAuthoritiesConverter(jwt -> {
-            var authorities = converter.convert(jwt);
-            System.out.println(">> JWT Roles from Token: " + authorities);
+            var authorities = authoritiesConverter.convert(jwt);
+            System.out.println("DEBUG: Extracted authorities from JWT: " + authorities);
+            System.out.println("DEBUG: JWT claims: " + jwt.getClaims());
             return authorities;
         });
 
         return jwtConverter;
     }
+
+
 }

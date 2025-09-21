@@ -14,13 +14,14 @@ import java.util.Optional;
 
 public interface TaskRepository extends JpaRepository<Task, Long> {
 
-    // Find overdue tasks
     @Query("SELECT t FROM Task t WHERE t.dueDate < CURRENT_DATE AND t.status <> 'COMPLETED'")
     List<Task> findOverdueTasks();
 
     List<Task> findByProjectId(Long projectId);
 
-    // Bulk status update
+    // NEW METHOD: Find tasks by assignee ID
+    List<Task> findByAssigneeId(Long assigneeId);
+
     @Transactional
     @Modifying
     @Query("UPDATE Task t SET t.status = :status WHERE t.id IN :taskIds")
@@ -31,11 +32,10 @@ public interface TaskRepository extends JpaRepository<Task, Long> {
     @Query("DELETE FROM Task t WHERE t.id = :taskId")
     void deleteTask(@Param("taskId") Long taskId);
 
-    // Find tasks by owner's OAuth provider ID
     @Query("SELECT t FROM Task t JOIN t.owner u WHERE u.oauthProviderId = :providerId")
     List<Task> findByOwnerProviderId(@Param("providerId") String providerId);
+
     List<Task> findByAssigneeIdAndProjectId(Long userId, Long projectId);
+
     Optional<Task> findByIdAndAssigneeIdAndProjectId(Long id, Long assigneeId, Long projectId);
-
-
 }

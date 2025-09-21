@@ -17,7 +17,12 @@ public interface ProjectRepository extends JpaRepository<Project, Long> {
     List<Project> findByUserId(@Param("userId") Long userId);
 
 
+
     // Find projects by owner's OAuth provider ID
     @Query("SELECT p FROM Project p JOIN p.owner u WHERE u.oauthProviderId = :providerId")
     List<Project> findByOwnerProviderId(@Param("providerId") String providerId);
+
+    // Find projects by OWNER ID (this is what you need)
+    @Query("SELECT p FROM Project p WHERE p.owner.id = :ownerId")
+    List<Project> findByOwnerId(@Param("ownerId") Long ownerId);
 }

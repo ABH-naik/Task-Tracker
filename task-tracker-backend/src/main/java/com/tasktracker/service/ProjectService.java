@@ -68,7 +68,7 @@ public class ProjectService {
         User user = userRepository.findById(userId)
                 .orElseThrow(() -> new IllegalArgumentException("User not found with ID: " + userId));
 
-        List<Project> projects = projectRepository.findByUserId(userId);
+        List<Project> projects = projectRepository.findByOwnerId(userId);
 
         return projects.stream()
                 .map(ProjectResponse::fromEntity)

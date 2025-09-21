@@ -116,7 +116,9 @@ public class UserService implements UserDetailsService {
 
         return Jwts.builder()
                 .setSubject(user.getEmail())
-                .claim("roles", user.getRole().name())
+//                .claim("roles", user.getRole().name())
+                .claim("roles", Collections.singletonList(user.getRole().name())) // <- Now it's a LIST
+
                 .setIssuer("TaskTracker")
                 .setIssuedAt(new Date())
                 .setExpiration(new Date(System.currentTimeMillis() + jwtExpirationMs))

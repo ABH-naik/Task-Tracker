@@ -28,6 +28,7 @@ public class RoleController {
                 .collect(Collectors.toList());
     }
     @PutMapping("/user/{userId}")
+    @PreAuthorize("hasRole('ADMIN')") // <-- THIS IS THE CRITICAL LINE
     public ResponseEntity<Void> updateUserRole(
             @PathVariable Long userId,
             @RequestBody Map<String, String> body) {
